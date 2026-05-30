@@ -1,9 +1,9 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
+import { CURRENCY_PAIRS, PAIR_LABELS } from "../types";
 import type { CurrencyPair } from "../types";
-import { PAIR_LABELS } from "../types";
 
-const PAIRS: CurrencyPair[] = ["USD_BYN", "EUR_BYN", "EUR_USD"];
+const PAIRS: CurrencyPair[] = [...CURRENCY_PAIRS];
 
 const Sidebar: React.FC = () => (
   <aside className="sidebar">

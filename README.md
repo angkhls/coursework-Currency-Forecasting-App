@@ -11,15 +11,22 @@
 - `https://api.nbrb.by/exrates/rates/{id}` — курс на дату
 - `https://api.nbrb.by/exrates/rates/dynamics/{id}` — история за период
 
-Поддерживаются: **USD, EUR, RUB, CNY** (к BYN).
+Поддерживаются **10 валют** (к BYN): **USD, EUR, RUB, CNY, GBP, PLN, AED, CHF, UAH, TRY**.
 
-Пары для графиков и прогноза:
+Пары для графиков и прогноза (все — официальный курс НБРБ):
 
-| Пара | Как считается |
-|------|----------------|
-| **USD/BYN** | курс доллара из НБРБ |
-| **EUR/BYN** | курс евро из НБРБ |
-| **EUR/USD** | кросс-курс: EUR÷USD по дням |
+| Пара | Валюта |
+|------|--------|
+| USD/BYN | доллар США |
+| EUR/BYN | евро |
+| RUB/BYN | российский рубль |
+| CNY/BYN | китайский юань |
+| GBP/BYN | фунт стерлингов |
+| PLN/BYN | польский злотый |
+| AED/BYN | дирхам ОАЭ |
+| CHF/BYN | швейцарский франк |
+| UAH/BYN | украинская гривна |
+| TRY/BYN | турецкая лира |
 
 Данные кэшируются в **SQLite** (по умолчанию) или PostgreSQL.
 
@@ -115,7 +122,7 @@ docker compose up -d
 - SMA(20), EMA(20), уровни поддержки и сопротивления
 - Дашборд с актуальными курсами и % изменения за неделю
 - Конвертер валют по курсам НБРБ
-- Прогноз **SARIMAX** для USD/BYN, EUR/BYN, EUR/USD
+- Прогноз **SARIMAX** для 10 пар XXX/BYN
 - Метрики MAPE/RMSE на holdout
 - Лента новостей рынка (Finnhub, категория `general`)
 
@@ -257,7 +264,7 @@ app.dependency_overrides[get_rate_service] = _get_service
 | `macro_service.py` | Макро-панель |
 | `calendar_utils.py` | Рабочие дни НБРБ, разворот прогноза на календарь |
 | `metrics_calc.py` | MAPE, RMSE |
-| `pairs.py` | Логика пар USD_BYN, EUR_USD |
+| `pairs.py`, `domain/currencies.py` | Справочник 10 пар XXX/BYN |
 
 #### 4.3. Domain — `domain/`
 
@@ -435,4 +442,4 @@ Frontend — **отдельное SPA**, не «слой» backend в смысл
 | GET | `/api/v1/rates/USD/on/2024-06-01` |
 | GET | `/api/v1/news` |
 
-`pair`: `USD_BYN`, `EUR_BYN`, `EUR_USD`
+`pair`: `USD_BYN`, `EUR_BYN`, `RUB_BYN`, `CNY_BYN`, `GBP_BYN`, `PLN_BYN`, `AED_BYN`, `CHF_BYN`, `UAH_BYN`, `TRY_BYN`

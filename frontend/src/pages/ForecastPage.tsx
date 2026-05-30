@@ -4,10 +4,10 @@ import { currencyApi } from "../api/client";
 import MainChart from "../components/MainChart";
 import MetricsPanel from "../components/MetricsPanel";
 import type { ChartData, CurrencyPair, ForecastResult, PeriodPreset } from "../types";
-import { PAIR_LABELS, PERIOD_LABELS } from "../types";
+import { CURRENCY_PAIRS, PAIR_LABELS, PERIOD_LABELS } from "../types";
 
 const PERIODS: PeriodPreset[] = ["week", "month", "year"];
-const PAIRS: CurrencyPair[] = ["USD_BYN", "EUR_BYN", "EUR_USD"];
+const PAIRS: CurrencyPair[] = [...CURRENCY_PAIRS];
 
 const ForecastPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();

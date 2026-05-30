@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { currencyApi } from "../api/client";
+import { CURRENCY_CODES, CURRENCY_FLAGS } from "../types";
 import type { CurrencyCode } from "../types";
-import { CURRENCY_FLAGS } from "../types";
 
-const CURRENCIES: CurrencyCode[] = ["USD", "EUR", "RUB", "CNY"];
+const CURRENCIES: CurrencyCode[] = [...CURRENCY_CODES];
 
 const Converter: React.FC = () => {
   const [amount, setAmount] = useState("100");

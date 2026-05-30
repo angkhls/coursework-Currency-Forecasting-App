@@ -1,9 +1,10 @@
 import React, { useState } from "react";
 import { currencyApi } from "../api/client";
+import { CURRENCY_CODES, CURRENCY_FLAGS } from "../types";
 import type { CurrencyCode } from "../types";
-import { CURRENCY_FLAGS } from "../types";
+import { formatNbrbQuote, formatPerUnitNote } from "../utils/currencyQuote";
 
-const CURRENCIES: CurrencyCode[] = ["USD", "EUR", "RUB", "CNY"];
+const CURRENCIES: CurrencyCode[] = [...CURRENCY_CODES];
 
 const HistoryWidget: React.FC = () => {
   const [currency, setCurrency] = useState<CurrencyCode>("USD");
@@ -16,8 +17,10 @@ const HistoryWidget: React.FC = () => {
     try {
       setError(null);
       const rate = await currencyApi.getRateOnDate(currency, date);
+      const perUnit = formatPerUnitNote(currency, rate.rate);
       setResult(
-        `${CURRENCY_FLAGS[currency]} ${currency}/BYN на ${new Date(rate.date).toLocaleDateString("ru-RU")}: ${rate.rate.toFixed(4)} BYN`
+        `${CURRENCY_FLAGS[currency]} на ${new Date(rate.date).toLocaleDateString("ru-RU")}: ${formatNbrbQuote(currency, rate.rate)}` +
+          (perUnit ? ` (${perUnit})` : "")
       );
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Не найдено");

@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { currencyApi } from "../api/client";
 import BankRatesTable from "../components/BankRatesTable";
 import MacroFactorsPanel from "../components/MacroFactorsPanel";
 import RealtimeMonitor from "../components/RealtimeMonitor";
 import type { CryptoRate, DashboardRate } from "../types";
-import { PAIR_LABELS } from "../types";
 
 const HomePage: React.FC = () => {
   const [rates, setRates] = useState<DashboardRate[]>([]);
@@ -50,13 +48,10 @@ const HomePage: React.FC = () => {
             </div>
           </div>
         </div>
-        <div className="pair-links">
-          {(Object.keys(PAIR_LABELS) as (keyof typeof PAIR_LABELS)[]).map((p) => (
-            <Link key={p} to={`/pair/${p}`} className="pill">
-              {PAIR_LABELS[p]} →
-            </Link>
-          ))}
-        </div>
+        <p className="hero-about__hint">
+          Графики и прогноз по парам — в боковой панели слева. Котировки НБРБ: за 1 ед. (USD, EUR, GBP, CHF), за 10
+          (CNY, PLN, AED, TRY), за 100 (RUB, UAH) — см. таблицу монитора.
+        </p>
       </section>
 
       <div className="home-grid">

@@ -30,12 +30,13 @@ from service.calendar_utils import (
     filter_weekdays,
 )
 from service.macro_service import MacroService
-from service.pairs import build_pair_series, pair_currencies, period_to_days
+from domain.currencies import CURRENCY_CODES
+from service.pairs import pair_currencies, period_to_days
 from service.technical import build_chart_points
 
 HISTORY_DAYS = 365
 HOLDOUT_DAYS = 30
-DASHBOARD_CURRENCIES: List[CurrencyCode] = ["USD", "EUR", "RUB", "CNY"]
+DASHBOARD_CURRENCIES: List[CurrencyCode] = list(CURRENCY_CODES)  # type: ignore[assignment]
 
 
 class RateService:
@@ -69,26 +70,11 @@ class RateService:
         await self.sync_rates(currency)
 
     async def _load_pair_history(self, pair: CurrencyPair, days: int) -> List[CurrencyRate]:
-        base, cross = pair_currencies(pair)
+        base, _ = pair_currencies(pair)
         await self._ensure_currency(base)
-        if cross:
-            await self._ensure_currency(cross)
-        else:
-            cross = "USD" if base != "USD" else "EUR"
-
         to_date = date.today()
         from_date = to_date - timedelta(days=days)
-        base_hist = await self._repo.get_history(base, from_date, to_date)
-
-        if pair in ("USD_BYN", "EUR_BYN"):
-            return base_hist
-
-        await self._ensure_currency("USD")
-        usd_hist = await self._repo.get_history("USD", from_date, to_date)
-        if pair == "EUR_USD":
-            eur_hist = base_hist if base == "EUR" else await self._repo.get_history("EUR", from_date, to_date)
-            return build_pair_series(pair, usd_hist, eur_hist)
-        return base_hist
+        return await self._repo.get_history(base, from_date, to_date)
 
     async def get_history(
         self, currency: CurrencyCode, days: int = 30
@@ -178,17 +164,11 @@ class RateService:
         if per_gram <= 0:
             raise ValueError("Некорректная цена золота")
 
-        if currency == "USD":
-            usd = await self.get_latest_rate("USD")
-            amount_byn = amount * usd.rate
-        elif currency == "EUR":
-            eur = await self.get_latest_rate("EUR")
-            amount_byn = amount * eur.rate
-        elif currency == "RUB":
-            rub = await self.get_latest_rate("RUB")
-            amount_byn = amount * rub.rate
-        else:
+        if currency == "BYN":
             amount_byn = amount
+        else:
+            fx = await self.get_latest_rate(currency)  # type: ignore[arg-type]
+            amount_byn = amount * fx.rate
 
         grams = round(amount_byn / per_gram, 4)
         return GoldCalcResult(

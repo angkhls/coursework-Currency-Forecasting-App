@@ -1,6 +1,7 @@
 import httpx
 from datetime import date, timedelta
 from typing import List
+from domain.currencies import NBRB_CURRENCY_IDS
 from domain.models import CurrencyRate, CurrencyCode
 
 # ─────────────────────────────────────────────
@@ -11,14 +12,6 @@ from domain.models import CurrencyRate, CurrencyCode
 # Остальной код ничего не знает о формате NBRB —
 # он работает только с CurrencyRate.
 # ─────────────────────────────────────────────
-
-# Маппинг: наш код валюты → числовой ID в системе NBRB
-NBRB_CURRENCY_IDS: dict[str, int] = {
-    "USD": 431,
-    "EUR": 451,
-    "RUB": 456,
-    "CNY": 462,
-}
 
 
 class NbrbApiClient:
@@ -50,11 +43,11 @@ class NbrbApiClient:
 
         NBRB endpoint: GET /exrates/rates/{currency_id}?ondate=YYYY-MM-DD&parammode=1
         """
-        currency_id = NBRB_CURRENCY_IDS[currency]
-        url = f"{self.BASE_URL}/rates/{currency_id}"
+        # parammode=2 — поиск по коду валюты (Cur_Abbreviation); dynamics — по Cur_ID из NBRB_CURRENCY_IDS
+        url = f"{self.BASE_URL}/rates/{currency}"
         params = {
-            "ondate": target_date.isoformat(),  # формат: 2024-01-15
-            "parammode": 1                       # режим поиска по ID
+            "ondate": target_date.isoformat(),
+            "parammode": 2,
         }
 
         response = await self._client.get(url, params=params)

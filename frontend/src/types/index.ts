@@ -1,5 +1,47 @@
-export type CurrencyCode = "USD" | "EUR" | "RUB" | "CNY";
-export type CurrencyPair = "USD_BYN" | "EUR_BYN" | "EUR_USD";
+export const CURRENCY_CODES = [
+  "USD",
+  "EUR",
+  "RUB",
+  "CNY",
+  "GBP",
+  "PLN",
+  "AED",
+  "CHF",
+  "UAH",
+  "TRY",
+] as const;
+
+export type CurrencyCode = (typeof CURRENCY_CODES)[number];
+
+/** Сколько единиц валюты в одной официальной котировке НБРБ (Cur_Scale). */
+export const CURRENCY_QUOTE_SCALE: Record<CurrencyCode, number> = {
+  USD: 1,
+  EUR: 1,
+  GBP: 1,
+  CHF: 1,
+  RUB: 100,
+  CNY: 10,
+  PLN: 10,
+  AED: 10,
+  UAH: 100,
+  TRY: 10,
+};
+
+export const CURRENCY_PAIRS = [
+  "USD_BYN",
+  "EUR_BYN",
+  "RUB_BYN",
+  "CNY_BYN",
+  "GBP_BYN",
+  "PLN_BYN",
+  "AED_BYN",
+  "CHF_BYN",
+  "UAH_BYN",
+  "TRY_BYN",
+] as const;
+
+export type CurrencyPair = (typeof CURRENCY_PAIRS)[number];
+
 export type ForecastMethod = "sarimax";
 export type PeriodPreset = "day" | "week" | "month" | "year";
 
@@ -144,7 +186,14 @@ export interface NewsFeed {
 export const PAIR_LABELS: Record<CurrencyPair, string> = {
   USD_BYN: "USD / BYN",
   EUR_BYN: "EUR / BYN",
-  EUR_USD: "EUR / USD",
+  RUB_BYN: "RUB / BYN",
+  CNY_BYN: "CNY / BYN",
+  GBP_BYN: "GBP / BYN",
+  PLN_BYN: "PLN / BYN",
+  AED_BYN: "AED / BYN",
+  CHF_BYN: "CHF / BYN",
+  UAH_BYN: "UAH / BYN",
+  TRY_BYN: "TRY / BYN",
 };
 
 export const CURRENCY_FLAGS: Record<CurrencyCode, string> = {
@@ -152,6 +201,12 @@ export const CURRENCY_FLAGS: Record<CurrencyCode, string> = {
   EUR: "🇪🇺",
   RUB: "🇷🇺",
   CNY: "🇨🇳",
+  GBP: "🇬🇧",
+  PLN: "🇵🇱",
+  AED: "🇦🇪",
+  CHF: "🇨🇭",
+  UAH: "🇺🇦",
+  TRY: "🇹🇷",
 };
 
 export const PERIOD_LABELS: Record<PeriodPreset, string> = {

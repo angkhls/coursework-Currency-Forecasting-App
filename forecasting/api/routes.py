@@ -20,6 +20,7 @@ from domain.models import (
     PeriodPreset,
 )
 from infrastructure.finnhub_client import FinnhubClient
+from domain.currencies import CURRENCY_CODES
 from service.bank_rates_service import BankRatesService
 from service.rate_service import RateService
 
@@ -204,7 +205,7 @@ async def get_market_news(finnhub: FinnhubClient = Depends(get_finnhub_client)):
 @router.get("/rates/all/latest")
 async def get_all_latest(service: RateService = Depends(get_rate_service)):
     results = {}
-    for currency in ["USD", "EUR", "RUB", "CNY"]:
+    for currency in CURRENCY_CODES:
         try:
             results[currency] = await service.get_latest_rate(currency)
         except ValueError:

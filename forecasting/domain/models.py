@@ -3,8 +3,21 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, Field
 
-CurrencyCode = Literal["USD", "EUR", "RUB", "CNY"]
-CurrencyPair = Literal["USD_BYN", "EUR_BYN", "EUR_USD"]
+CurrencyCode = Literal[
+    "USD", "EUR", "RUB", "CNY", "GBP", "PLN", "AED", "CHF", "UAH", "TRY"
+]
+CurrencyPair = Literal[
+    "USD_BYN",
+    "EUR_BYN",
+    "RUB_BYN",
+    "CNY_BYN",
+    "GBP_BYN",
+    "PLN_BYN",
+    "AED_BYN",
+    "CHF_BYN",
+    "UAH_BYN",
+    "TRY_BYN",
+]
 ForecastMethod = Literal["sarimax"]
 PeriodPreset = Literal["day", "week", "month", "year"]
 

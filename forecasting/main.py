@@ -17,6 +17,7 @@ from infrastructure.belarusbank_client import BelarusbankClient
 from infrastructure.myfin_client import MyfinClient
 from infrastructure.nbrb_client import NbrbApiClient
 from infrastructure.sqlite_repository import SqliteCurrencyRateRepository
+from domain.currencies import CURRENCY_CODES
 from service.bank_rates_service import BankRatesService
 from service.rate_service import RateService
 
@@ -68,7 +69,7 @@ async def lifespan(app: FastAPI):
     app.dependency_overrides[get_finnhub_client] = _get_finnhub
 
     # Первичная загрузка курсов при старте
-    for currency in ("USD", "EUR", "RUB", "CNY"):
+    for currency in CURRENCY_CODES:
         try:
             await service.sync_rates(currency)  # type: ignore
         except Exception:

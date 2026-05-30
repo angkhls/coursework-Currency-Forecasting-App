@@ -5,12 +5,14 @@ import MainChart from "../components/MainChart";
 import MetricsPanel from "../components/MetricsPanel";
 import type { ChartData, CurrencyPair, ForecastResult, PeriodPreset } from "../types";
 import { PAIR_LABELS, PERIOD_LABELS } from "../types";
+import { baseCurrencyFromPair, formatNbrbQuote, formatPerUnitNote } from "../utils/currencyQuote";
 
 const PERIODS: PeriodPreset[] = ["week", "month", "year"];
 
 const PairPage: React.FC = () => {
   const { pair: pairParam } = useParams<{ pair: string }>();
   const pair = (pairParam ?? "USD_BYN") as CurrencyPair;
+  const baseCurrency = baseCurrencyFromPair(pair);
   const [period, setPeriod] = useState<PeriodPreset>("month");
   const [days, setDays] = useState(14);
   const [chart, setChart] = useState<ChartData | null>(null);
@@ -44,6 +46,17 @@ const PairPage: React.FC = () => {
       {error && <div className="alert alert--error">{error}</div>}
       <div className="glass-card pair-controls">
         <h2 className="pair-title">{PAIR_LABELS[pair]}</h2>
+        {chart && chart.points.length > 0 && (() => {
+          const last = chart.points[chart.points.length - 1];
+          const perUnit = formatPerUnitNote(baseCurrency, last.rate);
+          return (
+            <p className="pair-quote-note">
+              Курс НБРБ на {new Date(last.date).toLocaleDateString("ru-RU")}:{" "}
+              <strong>{formatNbrbQuote(baseCurrency, last.rate)}</strong>
+              {perUnit ? ` · на графике ось Y: ${perUnit}` : " · на графике: BYN за 1 ед."}
+            </p>
+          );
+        })()}
         <div className="forecast-controls">
           <div className="pill-group">
             {PERIODS.map((p) => (

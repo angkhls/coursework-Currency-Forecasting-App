@@ -5,7 +5,7 @@ import MainChart from "../components/MainChart";
 import MacroFactorsPanel from "../components/MacroFactorsPanel";
 import MarketPanel from "../components/MarketPanel";
 import type { ChartData, CurrencyPair, DashboardRate, ForecastResult, PeriodPreset } from "../types";
-import { PAIR_LABELS, PERIOD_LABELS } from "../types";
+import { CURRENCY_PAIRS, PAIR_LABELS, PERIOD_LABELS } from "../types";
 
 const PERIODS: PeriodPreset[] = ["day", "week", "month", "year"];
 
@@ -50,7 +50,7 @@ const Dashboard: React.FC = () => {
           <div className="glass-card" style={{ marginBottom: "1rem" }}>
             <div className="forecast-controls">
               <select className="select" value={pair} onChange={(e) => setPair(e.target.value as CurrencyPair)}>
-                {(Object.keys(PAIR_LABELS) as CurrencyPair[]).map((p) => (
+                {CURRENCY_PAIRS.map((p) => (
                   <option key={p} value={p}>
                     {PAIR_LABELS[p]}
                   </option>

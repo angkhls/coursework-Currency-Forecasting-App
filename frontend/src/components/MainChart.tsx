@@ -9,7 +9,8 @@ import {
   YAxis,
 } from "recharts";
 import type { ChartData, ForecastResult } from "../types";
-import { PAIR_LABELS } from "../types";
+import { CURRENCY_QUOTE_SCALE, PAIR_LABELS } from "../types";
+import { baseCurrencyFromPair } from "../utils/currencyQuote";
 
 interface Props {
   chart: ChartData | null;
@@ -106,13 +107,16 @@ const MainChart: React.FC<Props> = ({ chart, forecast, loading, large }) => {
   if (!chart) return null;
 
   const height = large ? 480 : 360;
+  const base = baseCurrencyFromPair(chart.pair);
+  const nbrbScale = CURRENCY_QUOTE_SCALE[base];
 
   return (
     <div className="chart-card glass-card">
       <div className="chart-header">
         <div className="chart-header__pair">{PAIR_LABELS[chart.pair]}</div>
         <span className="chart-y-hint">
-          Y: {yDomain[0].toFixed(4)} — {yDomain[1].toFixed(4)}
+          Y: {yDomain[0].toFixed(4)} — {yDomain[1].toFixed(4)} BYN за 1 {base}
+          {nbrbScale > 1 ? ` (НБРБ: за ${nbrbScale} ${base})` : ""}
         </span>
       </div>
       <ResponsiveContainer width="100%" height={height}>

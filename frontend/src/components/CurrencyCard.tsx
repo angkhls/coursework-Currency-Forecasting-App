@@ -6,11 +6,8 @@ interface Props {
   loading?: boolean;
 }
 
-const FLAGS: Record<string, string> = {
-  USD: "🇺🇸",
-  EUR: "🇪🇺",
-  RUB: "🇷🇺",
-};
+import { CURRENCY_FLAGS } from "../types";
+import { formatNbrbQuote, formatPerUnitNote } from "../utils/currencyQuote";
 
 const CurrencyCard: React.FC<Props> = ({ rate, loading }) => {
   if (loading) {
@@ -33,10 +30,13 @@ const CurrencyCard: React.FC<Props> = ({ rate, loading }) => {
   return (
     <div className="card">
       <div className="card__header">
-        <span className="card__flag">{FLAGS[rate.currency]}</span>
+        <span className="card__flag">{CURRENCY_FLAGS[rate.currency]}</span>
         <span className="card__currency">{rate.currency} / BYN</span>
       </div>
-      <div className="card__rate">{rate.rate.toFixed(4)}</div>
+      <div className="card__rate">{formatNbrbQuote(rate.currency, rate.rate)}</div>
+      {formatPerUnitNote(rate.currency, rate.rate) && (
+        <div className="card__quote-sub">{formatPerUnitNote(rate.currency, rate.rate)}</div>
+      )}
       <div className="card__date">
         Обновлено: {new Date(rate.date).toLocaleDateString("ru-RU")}
       </div>
