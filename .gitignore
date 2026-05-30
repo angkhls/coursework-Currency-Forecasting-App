@@ -1,0 +1,26 @@
+# Python
+forecasting/venv/
+forecasting/__pycache__/
+forecasting/data/
+forecasting/.env
+*.pyc
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+
+# Java
+**/target/
+**/.mvn/
+**/mvnw
+**/mvnw.cmd
+
+# Mobile (React Native)
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+
+# System & IDE
+.vscode/
+*.code-workspace
+.DS_Store

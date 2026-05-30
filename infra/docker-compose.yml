@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: currency_postgres
+    environment:
+      POSTGRES_DB: currencydb
+      POSTGRES_USER: currency_user
+      POSTGRES_PASSWORD: currency_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U currency_user -d currencydb"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ../forecasting
+      dockerfile: Dockerfile
+    container_name: currency_api
+    ports:
+      - "8000:8000"
+    environment:
+      STORAGE: postgres
+      DATABASE_URL: postgresql://currency_user:currency_pass@postgres:5432/currencydb
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      CORS_ORIGINS: http://localhost:3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
