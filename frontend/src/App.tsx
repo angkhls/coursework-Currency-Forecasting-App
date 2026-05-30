@@ -1,15 +1,25 @@
 import React from "react";
-import { BrowserRouter, Navigate, Route, Routes, useParams } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useParams, useSearchParams } from "react-router-dom";
 import Layout from "./components/Layout";
 import ConverterPage from "./pages/ConverterPage";
 import HomePage from "./pages/HomePage";
+import NewsPage from "./pages/NewsPage";
 import PairPage from "./pages/PairPage";
+
+const HomeEntry: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  if (searchParams.get("tab") === "news") {
+    return <Navigate to="/news" replace />;
+  }
+  return <HomePage />;
+};
 
 const App: React.FC = () => (
   <BrowserRouter>
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<HomeEntry />} />
+        <Route path="/news" element={<NewsPage />} />
         <Route path="/converter" element={<ConverterPage />} />
         <Route path="/pair/:pair" element={<PairPage />} />
       </Route>

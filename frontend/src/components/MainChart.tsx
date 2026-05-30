@@ -35,6 +35,11 @@ function sortRows(rows: Row[]): Row[] {
   return [...rows].sort((a, b) => a.dateKey.localeCompare(b.dateKey));
 }
 
+function isWeekendKey(dateKey: string): boolean {
+  const day = parseIso(dateKey).getDay();
+  return day === 0 || day === 6;
+}
+
 const MainChart: React.FC<Props> = ({ chart, forecast, loading, large }) => {
   const { data, yDomain } = useMemo(() => {
     if (!chart) return { data: [] as Row[], yDomain: [0, 1] as [number, number] };
@@ -58,6 +63,8 @@ const MainChart: React.FC<Props> = ({ chart, forecast, loading, large }) => {
 
       for (const p of forecast.forecast) {
         const key = p.date.slice(0, 10);
+        // На графике — только рабочие дни (в выходные НБРБ курс не меняется → линия «плоская»)
+        if (isWeekendKey(key)) continue;
         const existing = rows.find((r) => r.dateKey === key);
         const dt = parseIso(p.date);
         const label = dt.toLocaleDateString("ru-RU", { day: "2-digit", month: "short" });
@@ -162,7 +169,7 @@ const MainChart: React.FC<Props> = ({ chart, forecast, loading, large }) => {
             type="monotone"
             dataKey="ema"
             name="EMA(20)"
-            stroke="#fbbf24"
+            stroke="#22c55e"
             strokeWidth={1.5}
             dot={false}
             connectNulls

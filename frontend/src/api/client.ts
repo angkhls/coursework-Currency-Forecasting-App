@@ -11,6 +11,7 @@ import type {
   ForecastResult,
   GoldCalcResult,
   MacroPanel,
+  NewsFeed,
   ModelMetrics,
   PeriodPreset,
 } from "../types";
@@ -108,6 +109,11 @@ export const currencyApi = {
 
   syncRates: async (currency: CurrencyCode) => {
     const { data } = await http.post(`/rates/${currency}/sync`);
+    return data;
+  },
+
+  getNews: async (): Promise<NewsFeed> => {
+    const { data } = await http.get("/news");
     return data;
   },
 };

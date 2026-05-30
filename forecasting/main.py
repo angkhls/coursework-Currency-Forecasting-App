@@ -9,8 +9,9 @@ import asyncpg
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routes import get_bank_rates_service, get_rate_service, router
-from config import CORS_ORIGINS, POSTGRES_DSN, SQLITE_PATH, STORAGE
+from api.routes import get_bank_rates_service, get_finnhub_client, get_rate_service, router
+from config import CORS_ORIGINS, FINNHUB_API_KEY, POSTGRES_DSN, SQLITE_PATH, STORAGE
+from infrastructure.finnhub_client import FinnhubClient
 from infrastructure.db_repository import PostgresCurrencyRateRepository
 from infrastructure.belarusbank_client import BelarusbankClient
 from infrastructure.myfin_client import MyfinClient
@@ -48,8 +49,10 @@ async def lifespan(app: FastAPI):
     service = RateService(repository=repository, nbrb_client=nbrb)
 
     bank_rates = BankRatesService(BelarusbankClient(), MyfinClient(), nbrb)
+    finnhub = FinnhubClient(FINNHUB_API_KEY)
     app.state.rate_service = service
     app.state.bank_rates_service = bank_rates
+    app.state.finnhub_client = finnhub
 
     def _get_service() -> RateService:
         return app.state.rate_service
@@ -57,8 +60,12 @@ async def lifespan(app: FastAPI):
     def _get_banks() -> BankRatesService:
         return app.state.bank_rates_service
 
+    def _get_finnhub() -> FinnhubClient:
+        return app.state.finnhub_client
+
     app.dependency_overrides[get_rate_service] = _get_service
     app.dependency_overrides[get_bank_rates_service] = _get_banks
+    app.dependency_overrides[get_finnhub_client] = _get_finnhub
 
     # Первичная загрузка курсов при старте
     for currency in ("USD", "EUR", "RUB", "CNY"):

@@ -15,7 +15,13 @@ const Sidebar: React.FC = () => (
       <NavLink to="/" end className={({ isActive }) => (isActive ? "nav-link nav-link--active" : "nav-link")}>
         🏠 Главная
       </NavLink>
-      <NavLink to="/converter" className={({ isActive }) => (isActive ? "nav-link nav-link--active" : "nav-link")}>
+      <NavLink to="/news" className={({ isActive }) => (isActive ? "nav-link nav-link--active" : "nav-link")}>
+        📰 Новости
+      </NavLink>
+      <NavLink
+        to="/converter"
+        className={({ isActive }) => (isActive ? "nav-link nav-link--active" : "nav-link")}
+      >
         🔄 Конвертер
       </NavLink>
       <div className="nav-group__title">Валютные пары</div>

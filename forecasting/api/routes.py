@@ -16,8 +16,10 @@ from domain.models import (
     GoldCalcResult,
     MacroPanel,
     ModelMetrics,
+    NewsFeed,
     PeriodPreset,
 )
+from infrastructure.finnhub_client import FinnhubClient
 from service.bank_rates_service import BankRatesService
 from service.rate_service import RateService
 
@@ -29,6 +31,10 @@ def get_rate_service() -> RateService:
 
 
 def get_bank_rates_service() -> BankRatesService:
+    raise NotImplementedError("Dependency not configured")
+
+
+def get_finnhub_client() -> FinnhubClient:
     raise NotImplementedError("Dependency not configured")
 
 
@@ -182,6 +188,17 @@ async def sync_rates(
         return {"synced": count, "currency": currency}
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Ошибка NBRB API: {e}")
+
+
+@router.get("/news", response_model=NewsFeed)
+async def get_market_news(finnhub: FinnhubClient = Depends(get_finnhub_client)):
+    try:
+        articles = await finnhub.get_market_news("general")
+        return NewsFeed(category="general", articles=articles)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Ошибка Finnhub API: {e}")
 
 
 @router.get("/rates/all/latest")

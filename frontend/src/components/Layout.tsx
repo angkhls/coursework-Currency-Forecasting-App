@@ -10,9 +10,12 @@ const Layout: React.FC = () => {
   let title = "Главная";
   let subtitle = "О приложении, мониторинг и банки";
 
-  if (pathname === "/converter") {
+  if (pathname === "/news") {
+    title = "Новости";
+    subtitle = "Новости рынка (Finnhub)";
+  } else if (pathname === "/converter") {
     title = "Конвертер";
-    subtitle = "Перевод валют и расчёт золота";
+    subtitle = "Перевод валют и исторические курсы";
   } else if (pathname.startsWith("/pair/")) {
     const pair = pathname.replace("/pair/", "") as CurrencyPair;
     title = PAIR_LABELS[pair] ?? "Валютная пара";

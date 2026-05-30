@@ -122,6 +122,25 @@ export interface ConvertResult {
 
 export type AllLatestRates = Record<CurrencyCode, CurrencyRate | null>;
 
+export type NewsCategory = "forex" | "general" | "crypto" | "merger";
+
+export interface NewsArticle {
+  id: number;
+  headline: string;
+  summary: string;
+  source: string;
+  url: string;
+  image?: string | null;
+  category: string;
+  datetime: number;
+}
+
+export interface NewsFeed {
+  category: string;
+  articles: NewsArticle[];
+  source_note: string;
+}
+
 export const PAIR_LABELS: Record<CurrencyPair, string> = {
   USD_BYN: "USD / BYN",
   EUR_BYN: "EUR / BYN",

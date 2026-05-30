@@ -16,6 +16,8 @@ POSTGRES_DSN = os.getenv(
     "postgresql://currency_user:currency_pass@localhost:5432/currencydb",
 )
 
+FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY", "")
+
 CORS_ORIGINS = [
     o.strip()
     for o in os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")

@@ -136,3 +136,20 @@ class GoldCalcResult(BaseModel):
 class DashboardResponse(BaseModel):
     rates: List[DashboardRate]
     bitcoin: Optional[CryptoRate] = None
+
+
+class NewsArticle(BaseModel):
+    id: int
+    headline: str
+    summary: str
+    source: str
+    url: str
+    image: Optional[str] = None
+    category: str
+    datetime: int  # Unix timestamp
+
+
+class NewsFeed(BaseModel):
+    category: str
+    articles: List[NewsArticle]
+    source_note: str = "Данные: Finnhub Market News API"

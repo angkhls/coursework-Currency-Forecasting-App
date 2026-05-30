@@ -2,111 +2,122 @@ import pandas as pd
 from abc import ABC, abstractmethod
 from datetime import date, timedelta
 from typing import List
+
+import numpy as np
 from statsmodels.tsa.statespace.sarimax import SARIMAX
+
 from domain.models import CurrencyRate, ForecastPoint
 from service.calendar_utils import filter_weekdays
 
 # ─────────────────────────────────────────────
 # ПАТТЕРН: Strategy (Стратегия)
-#
-# Базовый класс определяет интерфейс прогноза.
-# Конкретные алгоритмы (SARIMAX, ARIMA и т.д.)
-# реализуют его независимо друг от друга.
-#
-# ForecastService не знает КАКОЙ алгоритм используется —
-# он просто вызывает predict(). Алгоритм можно
-# поменять без изменения остального кода.
 # ─────────────────────────────────────────────
 
-class BaseForecast(ABC):
-    """
-    Абстрактная стратегия прогнозирования.
-    Любой алгоритм прогноза должен реализовать predict().
-    """
 
+class BaseForecast(ABC):
     @abstractmethod
-    def predict(
-        self,
-        rates: List[CurrencyRate],
-        days: int
-    ) -> List[ForecastPoint]:
-        """
-        Принимает историю курсов, возвращает прогноз на N дней.
-        """
+    def predict(self, rates: List[CurrencyRate], days: int) -> List[ForecastPoint]:
         ...
 
 
+def _next_business_days(from_date: date, n: int) -> list[date]:
+    out: list[date] = []
+    d = from_date
+    while len(out) < n:
+        d += timedelta(days=1)
+        if d.weekday() < 5:
+            out.append(d)
+    return out
+
+
+def _to_business_series(rates: List[CurrencyRate]) -> pd.Series:
+    business = filter_weekdays(rates)
+    if len(business) < 20:
+        business = rates
+    series = pd.Series(
+        data=[r.rate for r in business],
+        index=pd.DatetimeIndex([r.date for r in business]),
+        name="rate",
+    ).sort_index()
+    if len(series) >= 2:
+        series = series.asfreq("B", method="ffill")
+    return series, business
+
+
+def _volatility_margin(series: pd.Series, steps: int) -> float:
+    diffs = series.diff().dropna()
+    daily_vol = float(diffs.std()) if len(diffs) else 0.0
+    if not np.isfinite(daily_vol) or daily_vol < 1e-9:
+        daily_vol = float(series.tail(20).std()) * 0.25 if len(series) > 1 else 0.0
+    last = float(series.iloc[-1])
+    margin = daily_vol * np.sqrt(max(steps, 1)) * 2.5
+    return max(margin, last * 0.008, 0.01)
+
+
+def _enrich_flat_forecast(series: pd.Series, predictions: pd.Series) -> pd.Series:
+    """Если SARIMAX дал почти константу — добавляем тренд последних дней."""
+    if len(predictions) == 0:
+        return predictions
+    last_val = float(series.iloc[-1])
+    spread = float(predictions.max() - predictions.min())
+    recent = series.tail(14)
+    hist_spread = float(recent.max() - recent.min()) if len(recent) > 1 else 0.0
+    threshold = max(last_val * 0.0003, 0.0008)
+
+    if spread >= threshold or hist_spread < threshold:
+        return predictions
+
+    tail = recent.tail(8)
+    if len(tail) < 2:
+        return predictions
+
+    slope = (float(tail.iloc[-1]) - float(tail.iloc[0])) / max(len(tail) - 1, 1)
+    enriched = [last_val + slope * (i + 1) for i in range(len(predictions))]
+    return pd.Series(enriched, index=predictions.index)
+
+
 class SARIMAXForecaster(BaseForecast):
-    """
-    Конкретная стратегия: прогноз через SARIMAX.
-
-    SARIMAX — модель временных рядов с:
-    - AR (авторегрессия): зависимость от прошлых значений
-    - I (интегрирование): убирает тренд
-    - MA (скользящее среднее): сглаживает шум
-    - X (экзогенные переменные): внешние факторы (не используем)
-
-    order=(1,1,1) — базовые параметры ARIMA
-    seasonal_order=(1,1,1,5) — недельная сезонность (5 рабочих дней)
-    """
-
     def __init__(
         self,
         order: tuple = (1, 1, 1),
-        seasonal_order: tuple = (1, 1, 1, 5)
+        seasonal_order: tuple = (1, 1, 1, 5),
     ):
-        # Параметры модели сохраняем при инициализации —
-        # это инкапсуляция конфигурации внутри класса
         self.order = order
         self.seasonal_order = seasonal_order
 
-    def predict(
-        self,
-        rates: List[CurrencyRate],
-        days: int
-    ) -> List[ForecastPoint]:
-        """
-        Обучает модель на истории и возвращает прогноз.
+    def predict(self, rates: List[CurrencyRate], days: int) -> List[ForecastPoint]:
+        series, business = _to_business_series(rates)
+        last_val = float(series.iloc[-1])
 
-        Шаги:
-        1. Преобразуем список CurrencyRate в pandas Series
-        2. Обучаем SARIMAX модель
-        3. Делаем прогноз на N шагов вперёд
-        4. Преобразуем результат в список ForecastPoint
-        """
-        # Шаг 1: строим временной ряд из истории курсов
-        # pandas Series с датой в качестве индекса —
-        # именно такой формат нужен SARIMAX
-        business = filter_weekdays(rates)
-        if len(business) < 20:
-            business = rates
-        series = pd.Series(
-            data=[r.rate for r in business],
-            index=pd.DatetimeIndex([r.date for r in business]),
-            name="rate",
-        )
-
-        # Шаг 2: создаём и обучаем модель
-        # disp=False — отключаем вывод итераций обучения в консоль
         try:
             model = SARIMAX(
                 series,
                 order=self.order,
                 seasonal_order=self.seasonal_order,
+                enforce_stationarity=False,
+                enforce_invertibility=False,
             )
-            result = model.fit(disp=False)
+            result = model.fit(disp=False, maxiter=80)
             forecast_res = result.get_forecast(steps=days)
             predictions = forecast_res.predicted_mean
             conf_int = forecast_res.conf_int(alpha=0.2)
         except Exception:
-            model = SARIMAX(series, order=(1, 1, 1), seasonal_order=(0, 0, 0, 0))
-            result = model.fit(disp=False)
+            model = SARIMAX(
+                series,
+                order=(1, 1, 1),
+                seasonal_order=(0, 0, 0, 0),
+                enforce_stationarity=False,
+                enforce_invertibility=False,
+            )
+            result = model.fit(disp=False, maxiter=80)
             forecast_res = result.get_forecast(steps=days)
             predictions = forecast_res.predicted_mean
             conf_int = forecast_res.conf_int(alpha=0.2)
 
-        last_val = float(series.iloc[-1])
-        predictions = predictions.clip(lower=last_val * 0.85, upper=last_val * 1.15)
+        predictions = _enrich_flat_forecast(series, predictions)
+
+        margin = _volatility_margin(series, days)
+        predictions = predictions.clip(lower=last_val - margin, upper=last_val + margin)
 
         last_date = business[-1].date
         forecast_dates = _next_business_days(last_date, days)
@@ -127,13 +138,3 @@ class SARIMAXForecaster(BaseForecast):
                 )
             )
         return points
-
-
-def _next_business_days(from_date: date, n: int) -> list[date]:
-    out: list[date] = []
-    d = from_date
-    while len(out) < n:
-        d += timedelta(days=1)
-        if d.weekday() < 5:
-            out.append(d)
-    return out
