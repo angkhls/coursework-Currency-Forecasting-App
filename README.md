@@ -98,6 +98,71 @@ npm run dev
 
 ---
 
+## Тестирование
+
+Автотесты покрывают **критичную бизнес-логику**: масштаб котировок НБРБ, конвертер, метрики, индикаторы и API. UI-компоненты React отдельно не тестируются — только чистые функции форматирования курсов.
+
+### Backend (pytest)
+
+Установка зависимостей для тестов (один раз, в активированном venv):
+
+```bash
+cd forecasting
+source venv/bin/activate
+pip install -r requirements-dev.txt
+```
+
+Запуск всех тестов:
+
+```bash
+pytest
+```
+
+С отчётом о покрытии:
+
+```bash
+pytest --cov=. --cov-report=term-missing
+```
+
+| Файл | Что проверяет |
+|------|----------------|
+| `tests/test_nbrb_client.py` | Адаптер НБРБ: деление на `Cur_Scale` для одиночного курса и для history (`dynamics`), где поле `Cur_Scale` отсутствует |
+| `tests/test_rate_scale.py` | Эвристика миграции: распознавание старых записей без масштаба (100 RUB = 3.872 вместо 0.03872) |
+| `tests/test_rate_service.py` | Конвертер валют и нормализованные курсы (100 RUB, 10 TRY) на in-memory репозитории |
+| `tests/test_api.py` | HTTP: `/health`, `/api/v1/convert` через FastAPI TestClient |
+| `tests/test_metrics_calc.py` | MAPE и RMSE для backtest |
+| `tests/test_technical.py` | SMA(20), EMA(20), support/resistance, сборка точек графика |
+| `tests/test_pairs.py` | Разбор пар `XXX_BYN`, пресеты периодов |
+
+**Покрытие backend (≈45% строк):** полный прогон `pytest --cov=.` без обращения к внешним API. Наиболее покрыты модули с расчётами и НБРБ:
+
+| Модуль | Покрытие |
+|--------|----------|
+| `infrastructure/nbrb_client.py` | ~91% |
+| `service/metrics_calc.py` | ~92% |
+| `service/pairs.py` | ~92% |
+| `service/technical.py` | ~88% |
+| `domain/models.py`, `config.py` | 100% |
+
+Низкое покрытие у `forecaster.py`, `macro_service.py`, парсеров банков — там нужны интеграционные тесты с моками HTML/API; для курсовой достаточно unit-тестов расчётного ядра.
+
+### Frontend (Vitest)
+
+```bash
+cd frontend
+npm install
+npm test              # один прогон
+npm run test:coverage # с отчётом
+```
+
+| Файл | Что проверяет |
+|------|----------------|
+| `src/utils/currencyQuote.test.ts` | Формат НБРБ («100 RUB = … BYN»), ось графика (`chartRate`, `chartYAxisLabel`), разбор пары |
+
+**Покрытие frontend:** модуль `currencyQuote.ts` — **100%**; общее по проекту ~6%, так как React-страницы и компоненты в тестах не участвуют.
+
+---
+
 ## Переменные окружения (`forecasting/.env`)
 
 ```env
@@ -137,11 +202,13 @@ CurrencyForecastingApp/
 │   ├── service/              # Сценарии приложения (Application)
 │   ├── domain/               # Модели и порты (Domain)
 │   ├── infrastructure/       # БД и внешние API (Infrastructure)
+│   ├── tests/                # pytest: НБРБ, конвертер, метрики, API
 │   ├── config.py
 │   └── main.py               # Composition Root — сборка зависимостей
 ├── frontend/                 # React SPA (отдельное приложение)
 │   ├── src/pages/
 │   ├── src/components/
+│   ├── src/utils/currencyQuote.test.ts  # Vitest
 │   └── src/api/client.ts
 └── infra/docker-compose.yml
 ```
