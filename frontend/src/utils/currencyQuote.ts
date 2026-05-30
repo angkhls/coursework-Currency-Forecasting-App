@@ -7,6 +7,18 @@ export function nbrbOfficialRate(ratePerUnit: number, currency: CurrencyCode): n
   return ratePerUnit * scale;
 }
 
+/** Курс для графика — в официальном масштабе НБРБ (100 RUB, 10 TRY и т.д.). */
+export function chartRate(ratePerUnit: number, currency: CurrencyCode): number {
+  return nbrbOfficialRate(ratePerUnit, currency);
+}
+
+/** Подпись оси Y на графике. */
+export function chartYAxisLabel(currency: CurrencyCode): string {
+  const scale = CURRENCY_QUOTE_SCALE[currency];
+  if (scale === 1) return `BYN за 1 ${currency}`;
+  return `BYN за ${scale} ${currency}`;
+}
+
 /** Как публикует НБРБ: «100 RUB = 3.8720 BYN». */
 export function formatNbrbQuote(currency: CurrencyCode, ratePerUnit: number): string {
   const scale = CURRENCY_QUOTE_SCALE[currency];

@@ -3,11 +3,12 @@ import {
   LineChart, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
-import type { CurrencyRate } from "../types";
+import type { CurrencyRate, CurrencyCode } from "../types";
+import { chartRate, chartYAxisLabel } from "../utils/currencyQuote";
 
 interface Props {
   data: CurrencyRate[];
-  currency: string;
+  currency: CurrencyCode;
 }
 
 const HistoryChart: React.FC<Props> = ({ data, currency }) => {
@@ -16,12 +17,13 @@ const HistoryChart: React.FC<Props> = ({ data, currency }) => {
       day: "2-digit",
       month: "2-digit",
     }),
-    rate: r.rate,
+    rate: chartRate(r.rate, currency),
   }));
 
   return (
     <div className="chart">
       <h3 className="chart__title">История курса {currency} / BYN</h3>
+      <p className="chart__subtitle">{chartYAxisLabel(currency)}</p>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />

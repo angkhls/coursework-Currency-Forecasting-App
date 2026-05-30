@@ -17,7 +17,7 @@ from infrastructure.belarusbank_client import BelarusbankClient
 from infrastructure.myfin_client import MyfinClient
 from infrastructure.nbrb_client import NbrbApiClient
 from infrastructure.sqlite_repository import SqliteCurrencyRateRepository
-from domain.currencies import CURRENCY_CODES
+from domain.currencies import CURRENCY_CODES, NBRB_QUOTE_SCALE
 from service.bank_rates_service import BankRatesService
 from service.rate_service import RateService
 
@@ -29,6 +29,26 @@ CREATE TABLE IF NOT EXISTS currency_rates (
     PRIMARY KEY (currency, date)
 );
 """
+
+
+def _rate_stored_without_scale(rate: float, scale: int) -> bool:
+    """Курсы из dynamics API раньше сохранялись без деления на Cur_Scale."""
+    if scale == 1:
+        return False
+    if rate > 1.0:
+        return True
+    return scale == 10 and rate > 0.15
+
+
+async def _repair_unscaled_rates(repository, service: RateService) -> None:
+    for currency in CURRENCY_CODES:
+        scale = NBRB_QUOTE_SCALE[currency]
+        if scale == 1:
+            continue
+        latest = await repository.get_latest(currency)  # type: ignore[arg-type]
+        if latest and _rate_stored_without_scale(latest.rate, scale):
+            await repository.delete_currency(currency)  # type: ignore[arg-type]
+            await service.sync_rates(currency)  # type: ignore[arg-type]
 
 
 @asynccontextmanager
@@ -67,6 +87,8 @@ async def lifespan(app: FastAPI):
     app.dependency_overrides[get_rate_service] = _get_service
     app.dependency_overrides[get_bank_rates_service] = _get_banks
     app.dependency_overrides[get_finnhub_client] = _get_finnhub
+
+    await _repair_unscaled_rates(repository, service)
 
     # Первичная загрузка курсов при старте
     for currency in CURRENCY_CODES:

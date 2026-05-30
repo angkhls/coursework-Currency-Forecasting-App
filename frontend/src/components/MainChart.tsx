@@ -10,7 +10,7 @@ import {
 } from "recharts";
 import type { ChartData, ForecastResult } from "../types";
 import { CURRENCY_QUOTE_SCALE, PAIR_LABELS } from "../types";
-import { baseCurrencyFromPair } from "../utils/currencyQuote";
+import { baseCurrencyFromPair, chartRate, chartYAxisLabel } from "../utils/currencyQuote";
 
 interface Props {
   chart: ChartData | null;
@@ -45,14 +45,18 @@ const MainChart: React.FC<Props> = ({ chart, forecast, loading, large }) => {
   const { data, yDomain } = useMemo(() => {
     if (!chart) return { data: [] as Row[], yDomain: [0, 1] as [number, number] };
 
+    const base = baseCurrencyFromPair(chart.pair);
+    const scale = CURRENCY_QUOTE_SCALE[base];
+    const toChart = (v: number) => chartRate(v, base);
+
     const rows: Row[] = chart.points.map((p) => {
       const dt = parseIso(p.date);
       return {
         dateKey: p.date.slice(0, 10),
         dateLabel: dt.toLocaleDateString("ru-RU", { day: "2-digit", month: "short" }),
-        rate: p.rate,
-        sma: p.sma_20 ?? undefined,
-        ema: p.ema_20 ?? undefined,
+        rate: toChart(p.rate),
+        sma: p.sma_20 != null ? toChart(p.sma_20) : undefined,
+        ema: p.ema_20 != null ? toChart(p.ema_20) : undefined,
       };
     });
 
@@ -69,13 +73,14 @@ const MainChart: React.FC<Props> = ({ chart, forecast, loading, large }) => {
         const existing = rows.find((r) => r.dateKey === key);
         const dt = parseIso(p.date);
         const label = dt.toLocaleDateString("ru-RU", { day: "2-digit", month: "short" });
+        const forecastValue = toChart(p.predicted_value);
         if (existing) {
-          existing.forecast = p.predicted_value;
+          existing.forecast = forecastValue;
         } else {
           rows.push({
             dateKey: key,
             dateLabel: label,
-            forecast: p.predicted_value,
+            forecast: forecastValue,
           });
         }
       }
@@ -91,14 +96,14 @@ const MainChart: React.FC<Props> = ({ chart, forecast, loading, large }) => {
       if (r.forecast != null) values.push(r.forecast);
     });
 
-    let yMin = chart.y_min;
-    let yMax = chart.y_max;
+    let yMin = toChart(chart.y_min);
+    let yMax = toChart(chart.y_max);
     if (values.length) {
       yMin = Math.min(yMin, ...values);
       yMax = Math.max(yMax, ...values);
     }
-    const span = yMax - yMin || 0.1;
-    const pad = Math.max(span * 0.08, 0.015);
+    const span = yMax - yMin || (scale > 1 ? 0.1 : 0.01);
+    const pad = Math.max(span * 0.08, scale > 1 ? 0.01 : 0.001);
 
     return { data: sorted, yDomain: [yMin - pad, yMax + pad] as [number, number] };
   }, [chart, forecast]);
@@ -108,15 +113,13 @@ const MainChart: React.FC<Props> = ({ chart, forecast, loading, large }) => {
 
   const height = large ? 480 : 360;
   const base = baseCurrencyFromPair(chart.pair);
-  const nbrbScale = CURRENCY_QUOTE_SCALE[base];
 
   return (
     <div className="chart-card glass-card">
       <div className="chart-header">
         <div className="chart-header__pair">{PAIR_LABELS[chart.pair]}</div>
         <span className="chart-y-hint">
-          Y: {yDomain[0].toFixed(4)} — {yDomain[1].toFixed(4)} BYN за 1 {base}
-          {nbrbScale > 1 ? ` (НБРБ: за ${nbrbScale} ${base})` : ""}
+          Y: {yDomain[0].toFixed(4)} — {yDomain[1].toFixed(4)} {chartYAxisLabel(base)}
         </span>
       </div>
       <ResponsiveContainer width="100%" height={height}>

@@ -76,3 +76,8 @@ class CurrencyRateRepository(ABC):
         Используется для проверки актуальности данных.
         """
         ...
+
+    @abstractmethod
+    async def delete_currency(self, currency: CurrencyCode) -> None:
+        """Удалить все сохранённые курсы валюты."""
+        ...

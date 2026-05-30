@@ -9,22 +9,24 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import type { CurrencyRate, ForecastResult } from "../types";
+import type { CurrencyRate, ForecastResult, CurrencyCode } from "../types";
+import { chartRate, chartYAxisLabel } from "../utils/currencyQuote";
 
 interface Props {
   history: CurrencyRate[];
   forecast: ForecastResult | null;
-  currency: string;
+  currency: CurrencyCode;
 }
 
 const ForecastChart: React.FC<Props> = ({ history, forecast, currency }) => {
+  const toChart = (v: number) => chartRate(v, currency);
   const recent = history.slice(-30);
   const historyPoints = recent.map((r) => ({
     date: new Date(r.date).toLocaleDateString("ru-RU", {
       day: "2-digit",
       month: "2-digit",
     }),
-    rate: r.rate,
+    rate: toChart(r.rate),
     predicted: undefined as number | undefined,
   }));
 
@@ -34,8 +36,8 @@ const ForecastChart: React.FC<Props> = ({ history, forecast, currency }) => {
       day: "2-digit",
       month: "2-digit",
     }),
-    rate: index === 0 && last ? last.rate : undefined,
-    predicted: p.predicted_value,
+    rate: index === 0 && last ? toChart(last.rate) : undefined,
+    predicted: toChart(p.predicted_value),
   }));
 
   const chartData = [...historyPoints, ...forecastPoints];
@@ -43,6 +45,7 @@ const ForecastChart: React.FC<Props> = ({ history, forecast, currency }) => {
   return (
     <div className="chart">
       <h3 className="chart__title">Прогноз курса {currency} / BYN</h3>
+      <p className="chart__subtitle">{chartYAxisLabel(currency)}</p>
       <ResponsiveContainer width="100%" height={300}>
         <ComposedChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />

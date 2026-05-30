@@ -34,9 +34,6 @@ const BankRatesTable: React.FC = () => {
   return (
     <div className="glass-card bank-table-wrap">
       <h3>Курсы в банках — {table?.city ?? "Минск"}</h3>
-      <p className="bank-table__note">
-        Как на myfin.by: «Сдать» — банк покупает у вас, «Купить» — банк продаёт. Лучшие курсы выделены.
-      </p>
       {loading ? (
         <p className="loading">Загрузка…</p>
       ) : !table?.rows.length ? (
@@ -76,7 +73,6 @@ const BankRatesTable: React.FC = () => {
               </tbody>
             </table>
           </div>
-          <p className="bank-table__source">{table.source_note}</p>
         </>
       )}
     </div>

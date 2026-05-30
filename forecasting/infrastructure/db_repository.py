@@ -134,3 +134,10 @@ class PostgresCurrencyRateRepository(CurrencyRateRepository):
             date=row["date"],
             rate=row["rate"]
         )
+
+    async def delete_currency(self, currency: CurrencyCode) -> None:
+        async with self._pool.acquire() as conn:
+            await conn.execute(
+                "DELETE FROM currency_rates WHERE currency = $1",
+                currency,
+            )

@@ -7,7 +7,6 @@ import type {
   CurrencyRate,
   BankRatesTable,
   DashboardResponse,
-  ForecastMethod,
   ForecastResult,
   GoldCalcResult,
   MacroPanel,

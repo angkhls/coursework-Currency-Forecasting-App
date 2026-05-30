@@ -112,3 +112,11 @@ class SqliteCurrencyRateRepository(CurrencyRateRepository):
             date=date.fromisoformat(row["date"]),
             rate=row["rate"],
         )
+
+    async def delete_currency(self, currency: CurrencyCode) -> None:
+        assert self._db
+        await self._db.execute(
+            "DELETE FROM currency_rates WHERE currency = ?",
+            (currency,),
+        )
+        await self._db.commit()

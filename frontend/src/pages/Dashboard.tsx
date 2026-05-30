@@ -92,7 +92,7 @@ const Dashboard: React.FC = () => {
           </div>
           <MainChart chart={chart} forecast={forecast} loading={loading} />
           <div style={{ marginTop: "1rem" }}>
-            <MacroFactorsPanel pair={pair} />
+            <MacroFactorsPanel />
           </div>
         </div>
         <div className="widgets-column">

@@ -48,10 +48,6 @@ const HomePage: React.FC = () => {
             </div>
           </div>
         </div>
-        <p className="hero-about__hint">
-          Графики и прогноз по парам — в боковой панели слева. Котировки НБРБ: за 1 ед. (USD, EUR, GBP, CHF), за 10
-          (CNY, PLN, AED, TRY), за 100 (RUB, UAH) — см. таблицу монитора.
-        </p>
       </section>
 
       <div className="home-grid">

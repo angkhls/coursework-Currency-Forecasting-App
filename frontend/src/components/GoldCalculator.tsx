@@ -5,7 +5,7 @@ import { CURRENCY_FLAGS } from "../types";
 
 const GoldCalculator: React.FC = () => {
   const [amount, setAmount] = useState("1000");
-  const [currency, setCurrency] = useState<CurrencyCode>("BYN");
+  const [currency, setCurrency] = useState<CurrencyCode | "BYN">("BYN");
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,7 +30,7 @@ const GoldCalculator: React.FC = () => {
       </p>
       <div className="converter-form">
         <input className="input" type="number" min="0" value={amount} onChange={(e) => setAmount(e.target.value)} />
-        <select className="select" value={currency} onChange={(e) => setCurrency(e.target.value as CurrencyCode)}>
+        <select className="select" value={currency} onChange={(e) => setCurrency(e.target.value as CurrencyCode | "BYN")}>
           {(["USD", "EUR", "RUB"] as CurrencyCode[]).map((c) => (
             <option key={c} value={c}>
               {CURRENCY_FLAGS[c]} {c}

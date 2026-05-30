@@ -1,7 +1,7 @@
 import httpx
 from datetime import date, timedelta
 from typing import List
-from domain.currencies import NBRB_CURRENCY_IDS
+from domain.currencies import NBRB_CURRENCY_IDS, NBRB_QUOTE_SCALE
 from domain.models import CurrencyRate, CurrencyCode
 
 # ─────────────────────────────────────────────
@@ -88,11 +88,14 @@ class NbrbApiClient:
 
         # NBRB возвращает список:
         # [{"Cur_ID": 431, "Date": "2024-01-15T00:00:00", "Cur_OfficialRate": 3.2541}, ...]
+        # dynamics не возвращает Cur_Scale — берём из справочника НБРБ
+        default_scale = NBRB_QUOTE_SCALE.get(currency, 1)
         return [
             CurrencyRate(
                 currency=currency,
                 date=date.fromisoformat(item["Date"][:10]),
-                rate=item["Cur_OfficialRate"] / (item.get("Cur_Scale", 1) or 1),
+                rate=item["Cur_OfficialRate"]
+                / (item.get("Cur_Scale") or default_scale),
             )
             for item in data
         ]
