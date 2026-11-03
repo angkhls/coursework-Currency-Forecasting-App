@@ -13,7 +13,7 @@ from tests.test_rate_service import InMemoryRateRepository
 
 @pytest.fixture
 def scenario_service() -> RateService:
-    today = date(2026, 5, 30)
+    today = date.today()
     repo = InMemoryRateRepository(
         {
             "USD": CurrencyRate(currency="USD", date=today, rate=2.7596),
@@ -27,7 +27,7 @@ def scenario_service() -> RateService:
 
 @pytest.fixture
 def override_api_service():
-    today = date(2026, 5, 30)
+    today = date.today()
     repo = InMemoryRateRepository(
         {
             "USD": CurrencyRate(currency="USD", date=today, rate=2.7596),
