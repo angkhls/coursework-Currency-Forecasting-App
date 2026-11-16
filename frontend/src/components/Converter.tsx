@@ -17,7 +17,12 @@ const Converter: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await currencyApi.convert(parseFloat(amount), from, to);
+      const parsed = parseFloat(amount);
+      if (!Number.isFinite(parsed) || parsed <= 0) {
+        setError("Введите положительную сумму");
+        return;
+      }
+      const data = await currencyApi.convert(parsed, from, to);
       setResult(`${data.result.toFixed(4)} ${to} (курс: ${data.rate.toFixed(6)})`);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Ошибка");
