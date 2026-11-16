@@ -1,5 +1,5 @@
 import React from "react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { CURRENCY_PAIRS, PAIR_LABELS } from "../types";
 import type { CurrencyPair } from "../types";
 
@@ -7,10 +7,10 @@ const PAIRS: CurrencyPair[] = [...CURRENCY_PAIRS];
 
 const Sidebar: React.FC = () => (
   <aside className="sidebar">
-    <div className="sidebar__brand">
+    <Link to="/" className="sidebar__brand">
       <div className="sidebar__logo">💱</div>
       <span>CurrencyForecastingApp</span>
-    </div>
+    </Link>
     <nav className="sidebar__nav">
       <NavLink to="/" end className={({ isActive }) => (isActive ? "nav-link nav-link--active" : "nav-link")}>
         🏠 Главная
