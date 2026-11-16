@@ -1,5 +1,6 @@
 from datetime import date
-from typing import Dict, List, Optional
+import logging
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -23,6 +24,7 @@ from infrastructure.finnhub_client import FinnhubClient
 from domain.currencies import CURRENCY_CODES
 from service.bank_rates_service import BankRatesService
 from service.rate_service import RateService
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1", tags=["currency"])
 
@@ -43,7 +45,16 @@ def get_finnhub_client() -> FinnhubClient:
 async def dashboard(service: RateService = Depends(get_rate_service)):
     return await service.get_dashboard()
 
-
+@router.get("/rates/all/latest")
+async def get_all_latest(service: RateService = Depends(get_rate_service)):
+    results = {}
+    for currency in CURRENCY_CODES:
+        try:
+            results[currency] = await service.get_latest_rate(currency)
+        except ValueError:
+            results[currency] = None
+    return results
+    
 @router.get("/rates/{currency}/latest", response_model=CurrencyRate)
 async def get_latest_rate(
     currency: CurrencyCode, service: RateService = Depends(get_rate_service)
@@ -187,8 +198,9 @@ async def sync_rates(
     try:
         count = await service.sync_rates(currency)
         return {"synced": count, "currency": currency}
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Ошибка NBRB API: {e}")
+    except Exception:
+        logger.exception("Ошибка синхронизации с NBRB API")
+        raise HTTPException(status_code=502, detail="Внешний сервис НБРБ временно недоступен")
 
 
 @router.get("/news", response_model=NewsFeed)
@@ -198,16 +210,6 @@ async def get_market_news(finnhub: FinnhubClient = Depends(get_finnhub_client)):
         return NewsFeed(category="general", articles=articles)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=502, detail=f"Ошибка Finnhub API: {e}")
-
-
-@router.get("/rates/all/latest")
-async def get_all_latest(service: RateService = Depends(get_rate_service)):
-    results = {}
-    for currency in CURRENCY_CODES:
-        try:
-            results[currency] = await service.get_latest_rate(currency)
-        except ValueError:
-            results[currency] = None
-    return results
+    except Exception:
+        logger.exception("Ошибка запроса к Finnhub API")
+        raise HTTPException(status_code=502, detail="Сервис новостей временно недоступен")
